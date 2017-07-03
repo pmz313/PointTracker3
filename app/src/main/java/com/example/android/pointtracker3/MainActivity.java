@@ -7,6 +7,8 @@ import android.os.CountDownTimer;
 import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,10 +19,11 @@ import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private static TextView countdownTimerText;
-    private static EditText minutes;
-    private static Button startTimer, resetTimer;
-    private static CountDownTimer countDownTimer;
+    TextView countdownTimerText;
+    EditText minutes;
+    Button startTimer;
+    Button resetTimer;
+    CountDownTimer countDownTimer;
     int scoreRed = 0;
     int foulRed = 0;
     int faceRed = 0;
@@ -28,6 +31,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int foulWhite = 0;
     int faceWhite = 0;
     int msRemaining = 0;
+
+    private final TextWatcher timeWatcher = new TextWatcher()
+    {
+        public void beforeTextChanged(CharSequence s, int start, int count, int after)
+        {
+        }
+
+        public void onTextChanged(CharSequence s, int start, int before, int count)
+        {
+            if (countdownTimerText == null)
+                return;
+
+            SetTimer();
+        }
+
+        public void afterTextChanged(Editable s)
+        {
+            //if (countdownTimerText == null)
+            //    return;
+
+//            if (s.length() == 0)
+//            {
+//                countdownTimerText.setTex
+//            }
+//            else
+//            {
+//                textView.setText("You have entered : " + passwordEditText.getText());
+//            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,18 +81,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         setListeners();
+
+        minutes.addTextChangedListener(timeWatcher);
     }
 
-    protected void SetTimer() {
+    protected void SetTimer()
+    {
         String getMinutes = minutes.getText().toString();//Get minutes from edittext
         //Check validation over edit text
-        if (!getMinutes.equals("") && getMinutes.length() > 0) {
+        if (getMinutes.equals("") || getMinutes.length() <= 0)
+        {
+            long zero = 0;
+            countdownTimerText.setText(String.format("%02d:%02d", zero, zero));
+        }
+        else
+        {
             msRemaining = Integer.parseInt(getMinutes) * 60 * 1000;//Convert minutes into milliseconds
             //Convert milliseconds into minute and seconds
             long minRemaining = TimeUnit.MILLISECONDS.toMinutes(msRemaining) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(msRemaining));
             long secRemaining = TimeUnit.MILLISECONDS.toSeconds(msRemaining) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(msRemaining));
-            long mSecRemaining = msRemaining % 60;
-            String ms = String.format("%02d:%02d", minRemaining, secRemaining, mSecRemaining);
+            //long mSecRemaining = msRemaining % 60;
+            String ms = String.format("%02d:%02d", minRemaining, secRemaining);
             countdownTimerText.setText(ms);//set text
         }
     }
@@ -568,6 +610,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (countDownTimer != null) {
             countDownTimer.cancel();
             countDownTimer = null;
+            minutes.setEnabled(true);
         }
     }
 
@@ -583,10 +626,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 msRemaining = (int) millisUntilFinished;
                 long minRemaining = TimeUnit.MILLISECONDS.toMinutes(msRemaining) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(msRemaining));
                 long secRemaining = TimeUnit.MILLISECONDS.toSeconds(msRemaining) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(msRemaining));
-                long mSecRemaining = msRemaining % 60;
+                //long mSecRemaining = msRemaining % 60;
                 //Convert milliseconds into minute and seconds
-                String ms = String.format("%02d:%02d", minRemaining, secRemaining, mSecRemaining);
+                String ms = String.format("%02d:%02d", minRemaining, secRemaining);
                 countdownTimerText.setText(ms);//set text
+                minutes.setEnabled(false);
             }
 
             public void onFinish() {
@@ -598,6 +642,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 countdownTimerText.setText("STOP!"); //On finish change timer text
                 countDownTimer = null;//set CountDownTimer to null
                 startTimer.setText(getString(R.string.start_timer));//Change button text
+                minutes.setEnabled(true);
 
             }
         }.start();
